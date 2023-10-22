@@ -3,13 +3,17 @@ cmake_minimum_required(VERSION 3.28)
 # Define o nome do projeto
 project(MeuProjeto)
 
+# Define o projeto default no visual studio
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${CMAKE_PROJECT_NAME})
+
 # Define as fontes do projeto na pasta src
 file(GLOB MAIN_SOURCES "src/*.cpp")
 # Adiciona os arquivos sources que estão dentro de "ThirdParty/includes"
 file(GLOB_RECURSE THIRDPARTY_SOURCES "ThirdParty/includes/*.c" "ThirdParty/includes/*.cpp")
 
 # Adiciona um executável com as fontes
-add_executable( ${CMAKE_PROJECT_NAME}
+add_executable( 
+	${CMAKE_PROJECT_NAME}
 	${MAIN_SOURCES}
 	${THIRDPARTY_SOURCES}
 )
@@ -21,12 +25,16 @@ include_directories(
 )
 
 # Adiciona as pastas de linkagem aonde estão as libs
-target_link_directories( ${CMAKE_PROJECT_NAME} PRIVATE
+target_link_directories( 
+	${CMAKE_PROJECT_NAME} 
+	PRIVATE
 	ThirdParty/libs
 )
 
 # Adiciona as bibliotecas de terceiros que se deseja vincular ao executável
-target_link_libraries( ${CMAKE_PROJECT_NAME} PRIVATE
+target_link_libraries( 
+	${CMAKE_PROJECT_NAME} 
+	PRIVATE
 	glfw3.lib
 	${OPENGL_LIBRARIES}
 )
