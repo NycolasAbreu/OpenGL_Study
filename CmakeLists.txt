@@ -6,12 +6,12 @@ project(MeuProjeto)
 # Define o projeto default no visual studio
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${CMAKE_PROJECT_NAME})
 
-# Define as fontes do projeto na pasta src
+# Define as fontes do projeto
 file(GLOB MAIN_SOURCES "src/*.cpp")
-# Adiciona os arquivos sources que estão dentro de "ThirdParty/includes"
+# Define os arquivos sources que estão dentro de "ThirdParty/includes"
 file(GLOB_RECURSE THIRDPARTY_SOURCES "ThirdParty/includes/*.c" "ThirdParty/includes/*.cpp")
 
-# Adiciona um executável com as fontes
+# Adiciona o executável com as fontes
 add_executable( 
 	${CMAKE_PROJECT_NAME}
 	${MAIN_SOURCES}
@@ -19,7 +19,9 @@ add_executable(
 )
 
 # Define os arquivos de inclusão
-include_directories(
+target_include_directories(
+	${CMAKE_PROJECT_NAME}
+	PRIVATE
     include
     ThirdParty/includes
 )
@@ -31,10 +33,20 @@ target_link_directories(
 	ThirdParty/libs
 )
 
-# Adiciona as bibliotecas de terceiros que se deseja vincular ao executável
+# Adiciona as bibliotecas de terceiros
 target_link_libraries( 
 	${CMAKE_PROJECT_NAME} 
 	PRIVATE
 	glfw3.lib
 	${OPENGL_LIBRARIES}
 )
+
+# Define as flags de compilação
+if(MSVC)
+  target_compile_options(${CMAKE_PROJECT_NAME} PUBLIC /W4 /WX-)
+else()
+  target_compile_options(${CMAKE_PROJECT_NAME} PUBLIC -Wall -Wextra -Wpedantic -Werror)
+endif()
+
+target_compile_definitions("${CMAKE_PROJECT_NAME}" PUBLIC RESOURCES_PATH="${CMAKE_CURRENT_SOURCE_DIR}/Resources/") # This is useful to get an ASSETS_PATH in your IDE during development but you should comment this if you compile a release version and uncomment the next line
+#target_compile_definitions("${CMAKE_PROJECT_NAME}" PUBLIC RESOURCES_PATH="./Resources/") # Uncomment this line to setup the ASSETS_PATH macro to the final assets directory when you share the game
