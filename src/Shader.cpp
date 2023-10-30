@@ -1,5 +1,11 @@
 #include "Shader.h"
 
+#include <fstream>
+#include <sstream>
+#include <iostream>
+
+#include <glad/glad.h>
+
 //--------------------------------------------------------------------------------------------
 
 Shader::Shader(
@@ -17,16 +23,12 @@ Shader::Shader(
     std::cout << "(Shader::Shader) Error Reading Shaders File: " << e.what() << std::endl;
   }
 
-  // 2. compile shaders
+  // compile shaders
   unsigned int vertex = CompileShader(vertexCode.c_str(), ShaderTypes::VERTEX);
   unsigned int fragment = CompileShader(fragmentCode.c_str(), ShaderTypes::FRAGMENT);
 
-  // shader Program
-  programID = glCreateProgram();
-  glAttachShader(programID, vertex);
-  glAttachShader(programID, fragment);
-  glLinkProgram(programID);
-  CheckCompileErrors(programID, CompileErrorTypes::PROGRAM);
+  // Link shaders and create program
+  LinkShaders(vertex, fragment);
 
   // delete the shaders as they're linked into our program now and no longer necessary
   glDeleteShader(vertex);
@@ -94,7 +96,21 @@ unsigned int Shader::CompileShader(
 
 //--------------------------------------------------------------------------------------------
 
-void Shader::Activate() const
+void Shader::LinkShaders(
+  unsigned int vertexShader,
+  unsigned int fragmentShader
+) 
+{
+  programID = glCreateProgram();
+  glAttachShader(programID, vertexShader);
+  glAttachShader(programID, fragmentShader);
+  glLinkProgram(programID);
+  CheckCompileErrors(programID, CompileErrorTypes::PROGRAM);
+}
+
+//--------------------------------------------------------------------------------------------
+
+void Shader::Use() const
 {
   glUseProgram(programID);
 }

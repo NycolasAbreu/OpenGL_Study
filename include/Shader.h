@@ -1,12 +1,7 @@
 #ifndef SHADER_H
 #define SHADER_H
 
-#include <glad/glad.h>
-
 #include <string>
-#include <fstream>
-#include <sstream>
-#include <iostream>
 
 class Shader
 {
@@ -18,9 +13,11 @@ class Shader
       const std::string& fragmentPath
     );
 
+    ~Shader() = default;
+
     const Shader(const Shader&) = delete;
 
-    void Activate() const;
+    void Use() const;
 
     void SetBoolUniform(
       const std::string& name,
@@ -63,6 +60,11 @@ class Shader
     unsigned int CompileShader(
       const char* shaderCode,
       ShaderTypes shaderType
+    );
+
+    void LinkShaders(
+      unsigned int vertexShader,
+      unsigned int fragmentShader
     );
 
     void CheckCompileErrors(
