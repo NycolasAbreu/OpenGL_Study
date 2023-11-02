@@ -6,12 +6,14 @@
 #include "Texture.h"
 #include "Shader.h"
 
+#include "glm/gtc/matrix_transform.hpp"
+
 constexpr auto WINDOW_WIDTH = 800;
 constexpr auto WINDOW_HEIGHT = 600;
 
 //--------------------------------------------------------------------------------------------
 
-void framebuffer_size_callback(GLFWwindow* /*window*/, int width, int height);
+void framebuffer_size_callback(GLFWwindow*, int width, int height);
 void processInput(GLFWwindow* window);
 GLFWwindow* InitContext();
 
@@ -82,7 +84,25 @@ int main()
     wallTexture.UseUnit(0);
     smileTexture.UseUnit(1);
 
+    // translating an rotating the square
+    glm::mat4 trans(1.0f);
+    trans = glm::translate(trans, glm::vec3(0.5, 0, 0));
+    trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.10, 0.10, 0.10));
+    trans = glm::scale(trans, glm::vec3(0.5, 0.5, 0.5));
+
     simpleShader.Use();
+    simpleShader.SetMat4Uniform("transform", trans);
+
+    glBindVertexArray(VAO);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+
+    glm::mat4 trans1(1.0f);
+    trans1 = glm::translate(trans1, glm::vec3(-0.5, 0, 0));
+    trans1 = glm::rotate(trans1, (float)glfwGetTime(), glm::vec3(0.10, 0.10, 0.10));
+    trans1 = glm::scale(trans1, glm::vec3(0.5, 0.5, 0.5));
+
+    simpleShader.Use();
+    simpleShader.SetMat4Uniform("transform", trans1);
 
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
@@ -146,3 +166,5 @@ GLFWwindow* InitContext()
 
   return window;
 }
+
+//--------------------------------------------------------------------------------------------

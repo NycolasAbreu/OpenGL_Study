@@ -1,10 +1,11 @@
 #include "Shader.h"
 
-#include <fstream>
-#include <sstream>
 #include <iostream>
 
 #include <glad/glad.h>
+#include <glm/gtc/type_ptr.hpp>
+
+#include "Utils.h"
 
 //--------------------------------------------------------------------------------------------
 
@@ -17,7 +18,8 @@ Shader::Shader(
   std::string fragmentCode;
 
   try {
-    ExtractTextFromFile(vertexPath, fragmentPath, vertexCode, fragmentCode);
+    ExtractTextFromFile(vertexPath, vertexCode);
+    ExtractTextFromFile(fragmentPath, fragmentCode);
   }
   catch (std::ifstream::failure& e) {
     std::cout << "(Shader::Shader) Error Reading Shaders File: " << e.what() << std::endl;
@@ -37,47 +39,12 @@ Shader::Shader(
 
 //--------------------------------------------------------------------------------------------
 
-void Shader::ExtractTextFromFile(
-  const std::string& vertexPath,
-  const std::string& fragmentPath,
-  std::string& vertexCode,
-  std::string& fragmentCode
-) const
-{
-  std::ifstream vertexShaderFile;
-  std::ifstream fraShaderFile;
-
-  // ensure ifstream objects can throw exceptions:
-  vertexShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-  fraShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-
-  // open files
-  vertexShaderFile.open(vertexPath);
-  fraShaderFile.open(fragmentPath);
-
-  // read file's buffer contents into streams
-  std::stringstream vShaderStream;
-  std::stringstream fShaderStream;
-  vShaderStream << vertexShaderFile.rdbuf();
-  fShaderStream << fraShaderFile.rdbuf();
-
-  // return code from stream
-  vertexCode = vShaderStream.str();
-  fragmentCode = fShaderStream.str();
-
-  // close file handlers
-  vertexShaderFile.close();
-  fraShaderFile.close();
-}
-
-//--------------------------------------------------------------------------------------------
-
 unsigned int Shader::CompileShader(
   const char* shaderCode,
   ShaderTypes shaderType
 )
 {
-  unsigned int shaderID = -1;
+  unsigned int shaderID = -1U;
   if (shaderType == ShaderTypes::VERTEX) {
     shaderID = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(shaderID, 1, &shaderCode, nullptr);
@@ -147,6 +114,16 @@ void Shader::SetFloatUniform(
 
 //--------------------------------------------------------------------------------------------
 
+void Shader::SetMat4Uniform(
+  const std::string& name,
+  glm::mat4 value
+) const
+{
+  glUniformMatrix4fv(glGetUniformLocation(programID, name.c_str()), 1, GL_FALSE, glm::value_ptr(value));
+}
+
+//--------------------------------------------------------------------------------------------
+
 void Shader::CheckCompileErrors(
   unsigned int shader,
   CompileErrorTypes errorType
@@ -179,10 +156,9 @@ void Shader::CheckCompileErrors(
       }
       break;
     }
-    case CompileErrorTypes::UNKNOW:
     default:
       {
-        std::cout << "UKNOW ERROR: " << "\n ------------------------------------------------------- \n";
+        std::cout << "UKNOW ERROR " << "\n ------------------------------------------------------- \n";
         break;
       }
   }

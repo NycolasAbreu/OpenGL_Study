@@ -3,6 +3,10 @@
 
 #include <string>
 
+#include "glm/glm.hpp"
+
+//--------------------------------------------------------------------------------------------
+
 class Shader
 {
   public:
@@ -34,6 +38,11 @@ class Shader
       float value
     ) const;
 
+    void SetMat4Uniform(
+      const std::string& name,
+      glm::mat4 value
+    ) const;
+
   private:
     enum class CompileErrorTypes
     {
@@ -49,13 +58,6 @@ class Shader
       VERTEX,
       FRAGMENT
     };
-
-    void ExtractTextFromFile(
-      const std::string& vertexPath,
-      const std::string& fragmentPath,
-      std::string& vertexCode,
-      std::string& fragmentCode
-    ) const;
 
     unsigned int CompileShader(
       const char* shaderCode,
