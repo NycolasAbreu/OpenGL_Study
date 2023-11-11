@@ -4,6 +4,7 @@
 #include <iostream>
 #include <vector>
 
+#include "Camera.h"
 #include "Texture.h"
 #include "Shader.h"
 #include "VertexBuffer.h"
@@ -14,13 +15,22 @@
 constexpr auto WINDOW_WIDTH = 800;
 constexpr auto WINDOW_HEIGHT = 600;
 
-//--------------------------------------------------------------------------------------------
+Camera camera;
 
-void framebuffer_size_callback(GLFWwindow*, int width, int height);
+// Mouse input variables
+double lastX = WINDOW_WIDTH * 0.5f;
+double lastY = WINDOW_HEIGHT * 0.5f;
+bool firstMouse = true;
+
+// Keyboard input variables
+double deltaTime = 0.0f;
+double lastFrame = 0.0f;
+
+//--------------------------------------------------------------------------------------------
 void processInput(GLFWwindow* window);
 GLFWwindow* InitContext();
 void MeasureFps(int& nbFrames, double& lastTime, GLFWwindow* window);
-
+void MeasureDeltaTime();
 //--------------------------------------------------------------------------------------------
 
 int main()
@@ -36,11 +46,9 @@ int main()
   // Creating all the spaces
   glm::mat4 model(1.0f);
   glm::mat4 view(1.0f);
-  // note that we're translating the scene in the reverse direction of where we want to move
-  view = glm::translate(view, glm::vec3(0.0f, 0.0f, -5.0f));
-
-  glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)WINDOW_WIDTH / WINDOW_HEIGHT, 0.1f, 100.0f);
-  //::mat4 projection = glm::ortho(-5.0f, 5.0f, -5.0f, 5.0f, -10.0f, 15.0f);
+  glm::mat4 projection = glm::perspective(glm::radians((float)camera.GetZoom()),
+                                          (float)WINDOW_WIDTH / WINDOW_HEIGHT, 0.1f, 100.0f);
+  //glm::mat4 projection = glm::ortho(-5.0f, 5.0f, -5.0f, 5.0f, -10.0f, 15.0f);
 
   float vertices[] = {
       -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
@@ -143,6 +151,8 @@ int main()
       float angle = 20.0f * i + 10;
       model = glm::rotate(model, (float)glfwGetTime() * glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
       
+      view = camera.GetViewMatrix();
+
       glm::mat4 mvp(projection * view * model);
       simpleShader.SetMat4Uniform("mvp", mvp);
 
@@ -153,6 +163,7 @@ int main()
     glfwPollEvents();
     glfwSwapBuffers(window);
 
+    MeasureDeltaTime();
     MeasureFps(nbFrames, lastTime, window);
   }
 
@@ -164,13 +175,22 @@ int main()
 
 //--------------------------------------------------------------------------------------------
 
+void MeasureDeltaTime()
+{
+  const double currentFrame = glfwGetTime();
+  deltaTime = currentFrame - lastFrame;
+  lastFrame = currentFrame;
+}
+
+//--------------------------------------------------------------------------------------------
+
 void MeasureFps(
   int& nbFrames,
   double& lastTime,
   GLFWwindow* window
 )
 {
-  double currentTime = glfwGetTime();
+  const double currentTime = glfwGetTime();
   nbFrames++;
   if (currentTime - lastTime >= 1.0) {
     glfwSetWindowTitle(window, ("FPS: " + std::to_string(nbFrames)).c_str());
@@ -191,11 +211,46 @@ void framebuffer_size_callback(
 
 //--------------------------------------------------------------------------------------------
 
+void mouse_callback(GLFWwindow* /*window*/, double xPos, double yPos)
+{
+  if (firstMouse) {
+    lastX = xPos;
+    lastY = yPos;
+    firstMouse = false;
+  }
+
+  const double xOffset = xPos - lastX;
+  const double yOffset = lastY - yPos; // reversed since y-coordinates go from bottom to top
+
+  lastX = xPos;
+  lastY = yPos;
+
+  camera.ProcessMouseMovement(xOffset, yOffset);
+}
+
+//--------------------------------------------------------------------------------------------
+
+void scroll_callback(GLFWwindow* /*window*/, double /*xOffset*/, double yOffset)
+{
+  camera.ProcessMouseScroll(yOffset);
+}
+
+//--------------------------------------------------------------------------------------------
+
 void processInput(GLFWwindow* window)
 {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, true);
   }
+
+  if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+    camera.ProcessKeyboard(FORWARD, deltaTime);
+  if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+    camera.ProcessKeyboard(BACKWARD, deltaTime);
+  if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+    camera.ProcessKeyboard(LEFT, deltaTime);
+  if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+    camera.ProcessKeyboard(RIGHT, deltaTime);
 }
 
 //--------------------------------------------------------------------------------------------
@@ -221,7 +276,13 @@ GLFWwindow* InitContext()
   }
 
   glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+
+  // Set the window callbacks functions
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+
+  glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+  glfwSetCursorPosCallback(window, mouse_callback);
+  glfwSetScrollCallback(window, scroll_callback);
 
   return window;
 }
