@@ -39,6 +39,13 @@ double Camera::GetZoom() const
 
 //--------------------------------------------------------------------------------------------
 
+glm::vec3 Camera::GetPosition() const
+{
+  return position;
+}
+
+//--------------------------------------------------------------------------------------------
+
 void Camera::ProcessKeyboard(
   CameraMovement direction,
   double deltaTime

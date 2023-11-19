@@ -43,6 +43,11 @@ class Shader
       glm::mat4 value
     ) const;
 
+    void SetVec3Uniform(
+      const std::string& name,
+      glm::vec3 value
+    ) const;
+
   private:
     enum class CompileErrorTypes
     {

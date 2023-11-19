@@ -124,6 +124,16 @@ void Shader::SetMat4Uniform(
 
 //--------------------------------------------------------------------------------------------
 
+void Shader::SetVec3Uniform(
+  const std::string& name,
+  glm::vec3 value
+) const
+{
+  glUniform3fv(glGetUniformLocation(programID, name.c_str()), 1, &value[0]);
+}
+
+//--------------------------------------------------------------------------------------------
+
 void Shader::CheckCompileErrors(
   unsigned int shader,
   CompileErrorTypes errorType

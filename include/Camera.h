@@ -53,6 +53,8 @@ class Camera
 
     double GetZoom() const;
 
+    glm::vec3 GetPosition() const;
+
   private:
     void UpdateCameraVectors();
 
