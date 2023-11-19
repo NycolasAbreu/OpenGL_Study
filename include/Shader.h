@@ -2,6 +2,7 @@
 #define SHADER_H
 
 #include <string>
+#include <unordered_map>
 
 #include "glm/glm.hpp"
 
@@ -25,28 +26,28 @@ class Shader
 
     void SetBoolUniform(
       const std::string& name,
-      bool value)
-      const;
+      bool value
+    );
 
     void SetIntUniform(
       const std::string& name,
       int value
-    ) const;
+    );
 
     void SetFloatUniform(
       const std::string& name,
       float value
-    ) const;
+    );
 
     void SetMat4Uniform(
       const std::string& name,
       glm::mat4 value
-    ) const;
+    );
 
     void SetVec3Uniform(
       const std::string& name,
       glm::vec3 value
-    ) const;
+    );
 
   private:
     enum class CompileErrorTypes
@@ -79,7 +80,12 @@ class Shader
       CompileErrorTypes errorType
     ) const;
 
+    int Shader::GetUniformLocation(
+      const std::string& name
+    );
+
     unsigned int programID;
+    std::unordered_map<std::string, int> uniformNameLocation;
 };
 
 #endif

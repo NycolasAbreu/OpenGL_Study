@@ -87,9 +87,9 @@ void Shader::Use() const
 void Shader::SetBoolUniform(
   const std::string& name,
   bool value
-) const
+)
 {
-  glUniform1i(glGetUniformLocation(programID, name.c_str()), (int)value);
+  glUniform1i(GetUniformLocation(name), (int)value);
 }
 
 //--------------------------------------------------------------------------------------------
@@ -97,9 +97,9 @@ void Shader::SetBoolUniform(
 void Shader::SetIntUniform(
   const std::string& name,
   int value
-) const
+)
 {
-  glUniform1i(glGetUniformLocation(programID, name.c_str()), value);
+  glUniform1i(GetUniformLocation(name), value);
 }
 
 //--------------------------------------------------------------------------------------------
@@ -107,9 +107,9 @@ void Shader::SetIntUniform(
 void Shader::SetFloatUniform(
   const std::string& name,
   float value
-) const
+)
 {
-  glUniform1f(glGetUniformLocation(programID, name.c_str()), value);
+  glUniform1f(GetUniformLocation(name), value);
 }
 
 //--------------------------------------------------------------------------------------------
@@ -117,9 +117,9 @@ void Shader::SetFloatUniform(
 void Shader::SetMat4Uniform(
   const std::string& name,
   glm::mat4 value
-) const
+)
 {
-  glUniformMatrix4fv(glGetUniformLocation(programID, name.c_str()), 1, GL_FALSE, glm::value_ptr(value));
+  glUniformMatrix4fv(GetUniformLocation(name), 1, GL_FALSE, glm::value_ptr(value));
 }
 
 //--------------------------------------------------------------------------------------------
@@ -127,9 +127,26 @@ void Shader::SetMat4Uniform(
 void Shader::SetVec3Uniform(
   const std::string& name,
   glm::vec3 value
-) const
+)
 {
-  glUniform3fv(glGetUniformLocation(programID, name.c_str()), 1, &value[0]);
+  glUniform3fv(GetUniformLocation(name), 1, &value[0]);
+}
+
+//--------------------------------------------------------------------------------------------
+
+int Shader::GetUniformLocation(
+  const std::string& name
+)
+{
+  const auto uni = uniformNameLocation.find(name);
+  if (uni != uniformNameLocation.end()) {
+    return uni->second;
+  }
+  else {
+    const int uniLocation = glGetUniformLocation(programID, name.c_str());
+    uniformNameLocation.emplace(name, uniLocation);
+    return uniLocation;
+  }
 }
 
 //--------------------------------------------------------------------------------------------

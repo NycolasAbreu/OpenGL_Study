@@ -39,17 +39,11 @@ int main()
 
   glEnable(GL_DEPTH_TEST);
 
-  const Shader textureShader(RESOURCES_PATH "VertexShader.vs", RESOURCES_PATH "FragmentShader.fs");
-  const Shader lightShader(RESOURCES_PATH "VertexLightShader.vs", RESOURCES_PATH "FragmentLightShader.fs");
+  Shader textureShader(RESOURCES_PATH "VertexShader.vs", RESOURCES_PATH "FragmentShader.fs");
+  Shader lightShader(RESOURCES_PATH "VertexLightShader.vs", RESOURCES_PATH "FragmentLightShader.fs");
   
   const Texture wallTexture(RESOURCES_PATH "WallTexture.jpg", JPG);
   const Texture smileTexture(RESOURCES_PATH "SmileTexture.png", PNG, /*flipTexture*/true);
-
-  // Creating all the spaces
-  glm::mat4 model(1.0f);
-  glm::mat4 projection = glm::perspective(glm::radians((float)camera.GetZoom()),
-                                          (float)WINDOW_WIDTH / WINDOW_HEIGHT, 0.1f, 100.0f);
-  //glm::mat4 projection = glm::ortho(-5.0f, 5.0f, -5.0f, 5.0f, -10.0f, 15.0f);
 
   const float vertices[] = {
         //    Vertices              Normal         TextureMap
@@ -96,6 +90,7 @@ int main()
         -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
   };
   
+  // Bind the cube VAO and its attributes
   unsigned int cubeVAO;
   glGenVertexArrays(1, &cubeVAO);
   glBindVertexArray(cubeVAO);
@@ -143,6 +138,7 @@ int main()
     
     // light positioning
     glm::vec3 lightPos(2 * sin(glfwGetTime()), 2 * cos(glfwGetTime()), 2 * cos(glfwGetTime()));
+    glm::mat4 projection = glm::perspective(glm::radians((float)camera.GetZoom()), (float)WINDOW_WIDTH / WINDOW_HEIGHT, 0.1f, 100.0f);
 
     // seting texture to the uniform variable in shader
     wallTexture.UseUnit(0);
@@ -158,7 +154,7 @@ int main()
     textureShader.SetMat4Uniform("view", camera.GetViewMatrix());
 
     // world transformation
-    model = glm::mat4(1.0f);
+    auto model = glm::mat4(1.0f);
     textureShader.SetMat4Uniform("model", model);
     textureShader.SetMat4Uniform("inverseModel", glm::inverse(model));
 
