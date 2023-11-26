@@ -39,8 +39,8 @@ int main()
 
   glEnable(GL_DEPTH_TEST);
 
-  Shader textureShader(RESOURCES_PATH "VertexShader.vs", RESOURCES_PATH "FragmentShader.fs");
-  Shader lightShader(RESOURCES_PATH "VertexLightShader.vs", RESOURCES_PATH "FragmentLightShader.fs");
+  Shader textureMaterialShader(RESOURCES_PATH "Texture+MaterialShader.vs", RESOURCES_PATH "Texture+MaterialShader.fs");
+  Shader lightCubeShader(RESOURCES_PATH "LightCubeShader.vs", RESOURCES_PATH "LightCubeShader.fs");
   
   const Texture wallTexture(RESOURCES_PATH "WallTexture.jpg", JPG);
   const Texture smileTexture(RESOURCES_PATH "SmileTexture.png", PNG, /*flipTexture*/true);
@@ -120,9 +120,9 @@ int main()
 
   // Seting uniform values for the textures, need to set the same value in the texture
   // don't forget to activate the shader before setting uniforms
-  textureShader.Use();  
-  textureShader.SetIntUniform("texture1", 0);
-  textureShader.SetIntUniform("texture2", 1);
+  textureMaterialShader.Use();
+  textureMaterialShader.SetIntUniform("texture1", 0);
+  textureMaterialShader.SetIntUniform("texture2", 1);
 
   double lastTime = glfwGetTime();
   int nbFrames = 0;
@@ -135,41 +135,53 @@ int main()
     // rendering commands here
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    
-    // light positioning
-    glm::vec3 lightPos(2 * sin(glfwGetTime()), 2 * cos(glfwGetTime()), 2 * cos(glfwGetTime()));
-    glm::mat4 projection = glm::perspective(glm::radians((float)camera.GetZoom()), (float)WINDOW_WIDTH / WINDOW_HEIGHT, 0.1f, 100.0f);
 
     // seting texture to the uniform variable in shader
     wallTexture.UseUnit(0);
     smileTexture.UseUnit(1);
 
-    textureShader.Use();
-    textureShader.SetVec3Uniform("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
-    textureShader.SetVec3Uniform("lightPos", lightPos);
-    textureShader.SetVec3Uniform("viewPos", camera.GetPosition());
+    textureMaterialShader.Use();
+
+    textureMaterialShader.SetVec3Uniform("viewPos", camera.GetPosition());
+
+    // light properties
+    glm::vec3 lightColor(1.0f,1.0f,1.0f);
+    glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f); // decrease the influence
+    glm::vec3 ambientColor = diffuseColor * glm::vec3(0.5f); // low influence
+    textureMaterialShader.SetVec3Uniform("light.ambient", ambientColor);
+    textureMaterialShader.SetVec3Uniform("light.diffuse", diffuseColor);
+    textureMaterialShader.SetVec3Uniform("light.specular", { 1.0f, 1.0f, 1.0f });
+    glm::vec3 lightPos(2 * sin(glfwGetTime()), 2 * cos(glfwGetTime()), 2 * cos(glfwGetTime()));
+    textureMaterialShader.SetVec3Uniform("light.position", lightPos);
+
+    // material properties
+    textureMaterialShader.SetVec3Uniform("material.ambient", { 1.0f, 0.5f, 0.31f });
+    textureMaterialShader.SetVec3Uniform("material.diffuse", { 1.0f, 0.5f, 0.31f });
+    textureMaterialShader.SetVec3Uniform("material.specular", { 0.5f, 0.5f, 0.5f }); // specular lighting doesn't have full effect on this object's material
+    textureMaterialShader.SetFloatUniform("material.shininess", 32.0f);
 
     // view/projection transformations
-    textureShader.SetMat4Uniform("projection", projection);
-    textureShader.SetMat4Uniform("view", camera.GetViewMatrix());
+    glm::mat4 projection = glm::perspective(glm::radians((float)camera.GetZoom()), (float)WINDOW_WIDTH / WINDOW_HEIGHT, 0.1f, 100.0f);
+    textureMaterialShader.SetMat4Uniform("projection", projection);
+    textureMaterialShader.SetMat4Uniform("view", camera.GetViewMatrix());
 
     // world transformation
     auto model = glm::mat4(1.0f);
-    textureShader.SetMat4Uniform("model", model);
-    textureShader.SetMat4Uniform("inverseModel", glm::inverse(model));
+    textureMaterialShader.SetMat4Uniform("model", model);
+    textureMaterialShader.SetMat4Uniform("inverseModel", glm::inverse(model));
 
     // render the cube
     glBindVertexArray(cubeVAO);
     glDrawArrays(GL_TRIANGLES, 0, 36);
 
     // also draw the light cube object
-    lightShader.Use();
-    lightShader.SetMat4Uniform("projection", projection);
-    lightShader.SetMat4Uniform("view", camera.GetViewMatrix());
+    lightCubeShader.Use();
+    lightCubeShader.SetMat4Uniform("projection", projection);
+    lightCubeShader.SetMat4Uniform("view", camera.GetViewMatrix());
     model = glm::mat4(1.0f);
     model = glm::translate(model, lightPos);
     model = glm::scale(model, glm::vec3(0.5f));
-    lightShader.SetMat4Uniform("model", model);
+    lightCubeShader.SetMat4Uniform("model", model);
 
     glBindVertexArray(lightCubeVAO);
     glDrawArrays(GL_TRIANGLES, 0, 36);
